@@ -7,4 +7,4 @@
 &emsp;&emsp;3.与画布使用一样 lock 操作 unlock <br/>
 
 ### **注意**
-这里将yuv转RGBA_8888使用了libyuv ,libyuv的编译[请看这里](https://github.com/TF27674569/libyuv) <br/>
+这里将yuv转RGBA_8888使用了libyuv ,libyuv的编译[请看这里](https://github.com/TF27674569/libyuv) <br/>。 
