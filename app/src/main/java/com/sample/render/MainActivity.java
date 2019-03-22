@@ -15,7 +15,7 @@ import java.io.File;
 public class MainActivity extends AppCompatActivity {
 
     private SurfaceView surfaceView;
-    SurfaceHolder holder;
+    private SurfaceHolder holder;
 
     @Override
     protected void onCreate(Bundle savedInstanceState) {

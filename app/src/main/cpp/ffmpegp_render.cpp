@@ -130,43 +130,48 @@ Java_com_sample_render_ffmpegp_VideoUtils_render(JNIEnv *env, jclass type, jstri
 
 
     while (av_read_frame(pFormatCtx,avPacket)>=0){
-        // AVPacket - > AVFrame
-        // AVCodecContext 编码器上下文
-        // AVFrame 编码后一帧的数据
-        // int *got_picture_ptr 为0 表示没有数据了
-        // AVPacket  读取到的数据包
-        avcodec_decode_video2(pCodecCtx,yuvFrame,&got_picture_ptr,avPacket);
 
-        // 不为0 正在解码
-        if (got_picture_ptr){
-            // 锁住屏幕
-            // ANativeWindow* window  native窗口
-            // ANativeWindow_Buffer* outBuffer 缓冲区
-            // ARect* inOutDirtyBounds 矩阵 NULL
-            // 需要先设置缓冲区的属性
-            ANativeWindow_setBuffersGeometry(nativeWindow,pCodecCtx->width, pCodecCtx->height,WINDOW_FORMAT_RGBA_8888);
-            ANativeWindow_lock(nativeWindow,&outBuffer,NULL);
+        // 只解码视频文件
+        if (avPacket->stream_index == videoStreamId){
+            // AVPacket - > AVFrame
+            // AVCodecContext 编码器上下文
+            // AVFrame 编码后一帧的数据
+            // int *got_picture_ptr 为0 表示没有数据了
+            // AVPacket  读取到的数据包
+            avcodec_decode_video2(pCodecCtx,yuvFrame,&got_picture_ptr,avPacket);
 
-            // 设置缓冲区为outBuffer数据
-            avpicture_fill((AVPicture *)(rgbaFrame), (uint8_t* )outBuffer.bits, AV_PIX_FMT_ARGB, pCodecCtx->width, pCodecCtx->height);
+            // 不为0 正在解码
+            if (got_picture_ptr){
+                // 锁住屏幕
+                // ANativeWindow* window  native窗口
+                // ANativeWindow_Buffer* outBuffer 缓冲区
+                // ARect* inOutDirtyBounds 矩阵 NULL
+                // 需要先设置缓冲区的属性
+                ANativeWindow_setBuffersGeometry(nativeWindow,pCodecCtx->width, pCodecCtx->height,WINDOW_FORMAT_RGBA_8888);
+                ANativeWindow_lock(nativeWindow,&outBuffer,NULL);
 
-
-            // 将yuv数据转为argb8888 与sufaceview绘制的一致 这里使用libyuv库转换
-            I420ToARGB(yuvFrame->data[0],yuvFrame->linesize[0],// Y
-                       yuvFrame->data[2],yuvFrame->linesize[2],// V
-                       yuvFrame->data[1],yuvFrame->linesize[1],// U
-                       rgbaFrame->data[0],rgbaFrame->linesize[0],// OUT  rgba 只有一块 没有与yuv一样4 1 1 区分
-                       pCodecCtx->width,pCodecCtx->height// w h
-                    );
+                // 设置缓冲区为outBuffer数据
+                avpicture_fill((AVPicture *)(rgbaFrame), (uint8_t* )outBuffer.bits, AV_PIX_FMT_ARGB, pCodecCtx->width, pCodecCtx->height);
 
 
-            // 解锁屏幕
-            ANativeWindow_unlockAndPost(nativeWindow);
+                // 将yuv数据转为argb8888 与sufaceview绘制的一致 这里使用libyuv库转换
+                I420ToARGB(yuvFrame->data[0],yuvFrame->linesize[0],// Y
+                           yuvFrame->data[2],yuvFrame->linesize[2],// V
+                           yuvFrame->data[1],yuvFrame->linesize[1],// U
+                           rgbaFrame->data[0],rgbaFrame->linesize[0],// OUT  rgba 只有一块 没有与yuv一样4 1 1 区分
+                           pCodecCtx->width,pCodecCtx->height// w h
+                );
 
-            // 防止绘制过快 16每帧
-            usleep(1000 * 16);
 
-            LOGI("解码第%d帧",frameCount++);
+                // 解锁屏幕
+                ANativeWindow_unlockAndPost(nativeWindow);
+
+                // 防止绘制过快 16每帧
+                usleep(1000 * 16);
+
+                LOGI("解码第%d帧",frameCount++);
+            }
+
         }
 
         av_free_packet(avPacket);
